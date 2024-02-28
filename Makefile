@@ -3,7 +3,7 @@ rwildcard = $(filter-out \ ,$(foreach pattern,$(2),$(wildcard $(1)/$(pattern)))$
 # https://stackoverflow.com/a/7324640/13830772
 eq = $(and $(findstring $(1),$(2)),$(findstring $(2),$(1)))
 
-TARGET ?= main
+TARGET ?= parent
 BUILD_DIR = build
 
 DEBUG_SUFFIX = $(if $(call eq,$(MODE),debug),-debug)
