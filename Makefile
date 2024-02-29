@@ -10,33 +10,33 @@ DEBUG_SUFFIX = $(if $(call eq,$(MODE),debug),-debug)
 CFLAGS = -W -Wall -Wextra -Werror -pedantic -std=c11 -Isrc/main/ $(if $(call eq,$(MODE),debug),-ggdb)
 CC = gcc $(CFLAGS)
 SOURCES = $(call rwildcard,src/main,*.c)
-SOURCE_STUB = $(BUILD_DIR)/stub.c
-MAIN_OBJ = $(BUILD_DIR)/main-part$(DEBUG_SUFFIX).o
+OBJECTS = $(foreach source,$(SOURCES),$(call object,$(source)))
 MAINS = $(wildcard src/cmd/*.c)
-TARGETS = $(foreach main,$(MAINS),$(patsubst %.c,%,$(notdir $(main))))
-EXECUTABLES = $(foreach target,$(TARGETS),$(call exec,$(target)))
-exec = $(BUILD_DIR)/$(1)$(DEBUG_SUFFIX)
+EXECUTABLES = $(foreach main,$(MAINS),$(call executable,$(main)))
+
+executable = $(BUILD_DIR)/$(patsubst %.c,%,$(notdir $(1)))$(DEBUG_SUFFIX)
+object = $(BUILD_DIR)/$(patsubst %.c,%.o,$(1))
+dependencies = $(CC) -MM $(1) -MT $(2)
+
+$(foreach source,$(SOURCES),$(eval $(shell $(call dependencies,$(source),$(call object,$(source))))))
+$(foreach main,$(MAINS),$(eval $(shell $(call dependencies,$(main),$(call executable,$(main))))))
 
 all: app
 
 .PHONY: run
 run: $(EXECUTABLES)
-	@$(call exec,$(TARGET))
+	@$(BUILD_DIR)/$(TARGET)
 
 .PHONY: app
 app: $(EXECUTABLES)
 
-$(EXECUTABLES): $(call exec,%): src/cmd/%.c $(MAIN_OBJ)
-	$(CC) $< $(MAIN_OBJ) -o $@
+$(EXECUTABLES): $(call executable,%): src/cmd/%.c $(OBJECTS)
+	mkdir -p $(dir $@)
+	$(CC) $< $(OBJECTS) -o $@
 
-$(MAIN_OBJ): $(SOURCES) $(SOURCE_STUB)
-	$(CC) -c $(SOURCES) $(SOURCE_STUB) -o $@
-
-$(SOURCE_STUB): | $(BUILD_DIR)
-	echo "typedef int make_iso_compilers_happy;" > $@
-
-$(BUILD_DIR):
-	mkdir $(BUILD_DIR)
+$(OBJECTS): $(call object,%.c): %.c
+	mkdir -p $(dir $@)
+	$(CC) -c $< -o $@
 
 clean:
 	rm -rf $(BUILD_DIR)
