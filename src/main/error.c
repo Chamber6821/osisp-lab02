@@ -8,5 +8,6 @@ void error(enum Error code, const char *format, ...) {
   va_start(formatArgs, format);
   vfprintf(stderr, format, formatArgs);
   va_end(formatArgs);
+  putc('\n', stderr);
   exit(code);
 }
