@@ -1,3 +1,4 @@
+#include "error.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,6 +7,9 @@
 #include <unistd.h>
 
 int main() {
+  const char *childPath = getenv("CHILD_PATH");
+  if (!childPath)
+    error(CHILD_PATH_NOT_SET, "Environment variable CHILD_PATH not set");
   pid_t child = fork();
   if (child == 0) {
     char *argv[] = {NULL};
