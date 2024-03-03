@@ -20,6 +20,23 @@ void sortString(char **strings, int (*comparator)(const char *, const char *)) {
     }
 }
 
+void forkChild(const char *path, char *const *argv, char *const *envp) {
+  if (fork() == 0) execve(path, argv, envp);
+}
+
+const char *childPathUseGetenv() { return getenv("CHILD_PATH"); }
+
+const char *childPathUseEnvp(char *const *envp) {
+  const char *prefix = "CHILD_PATH=";
+  for (char *const *it = envp; *it; ++it) {
+    if (strncmp(prefix, *it, strlen(prefix)) != 0) continue;
+    return strchr(*it, '=') + 1;
+  }
+  return NULL;
+}
+
+const char *childPathUseEnviron() { return childPathUseEnvp(environ); }
+
 int main(int argc, char **argv, char **envp) {
   (void)argc;
   (void)argv;
@@ -29,10 +46,16 @@ int main(int argc, char **argv, char **envp) {
     printf("%s\n", *env);
   }
 
-  const char *childDir = getenv("CHILD_PATH");
+  printf("childPathUseGetenv:  '%s'\n", childPathUseGetenv());
+  printf("childPathUseEnvp:    '%s'\n", childPathUseEnvp(envp));
+  printf("childPathUseEnviron: '%s'\n", childPathUseEnviron());
+
+  const char *childDir = childPathUseGetenv();
   const char *childName = "/child";
   if (!childDir)
     error(CHILD_PATH_NOT_SET, "Environment variable CHILD_PATH not set");
   char childPath[strlen(childDir) + strlen(childName) + 1];
   strcat(strcpy(childPath, childDir), childName);
+
+  printf("child: '%s'\n", childPath);
 }
