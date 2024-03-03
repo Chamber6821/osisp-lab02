@@ -10,6 +10,8 @@ DEBUG_SUFFIX = $(if $(call eq,$(MODE),debug),-debug)
 CFLAGS = -W -Wall -Wextra -Werror -pedantic -std=c11 -Isrc/main/ $(if $(call eq,$(MODE),debug),-ggdb)
 CC = gcc $(CFLAGS)
 VALGRIND = valgrind --leak-check=full --show-leak-kinds=all
+GDB = gdb
+GDB_COMMANDS = $(BUILD_DIR)/gdb-commands.txt
 
 SOURCES = $(call rwildcard,src/main,*.c)
 OBJECTS = $(foreach source,$(SOURCES),$(call object,$(source)))
@@ -32,6 +34,10 @@ run: $(EXECUTABLES)
 vrun: $(EXECUTABLES)
 	$(VALGRIND) $(call target,$(TARGET))
 
+.PHONE: gdb
+gdb: $(EXECUTABLES) $(GDB_COMMANDS)
+	$(GDB) -x $(GDB_COMMANDS) -q $(call target,$(TARGET))
+
 .PHONY: app
 app: $(EXECUTABLES)
 
@@ -45,6 +51,11 @@ $(EXECUTABLES): $(call executable,%): src/cmd/%.c $(OBJECTS)
 $(OBJECTS): $(call object,%.c): %.c
 	mkdir -p $(dir $@)
 	$(CC) -c $< -o $@
+
+$(GDB_COMMANDS):
+	mkdir -p $(dir $@)
+	echo run finish > $@
+	echo bt 10 >> $@
 
 .PHONY: all
 clean:
