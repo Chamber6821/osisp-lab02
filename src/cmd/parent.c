@@ -28,7 +28,11 @@ int main(int argc, char **argv, char **envp) {
   for (char **env = envp; *env; ++env) {
     printf("%s\n", *env);
   }
-  printf("I am parent!\n");
 
-  waitpid(-1, NULL, 0);
+  const char *childDir = getenv("CHILD_PATH");
+  const char *childName = "/child";
+  if (!childDir)
+    error(CHILD_PATH_NOT_SET, "Environment variable CHILD_PATH not set");
+  char childPath[strlen(childDir) + strlen(childName) + 1];
+  strcat(strcpy(childPath, childDir), childName);
 }
