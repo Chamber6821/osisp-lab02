@@ -21,7 +21,10 @@ void sortString(char **strings, int (*comparator)(const char *, const char *)) {
 }
 
 void forkChild(const char *path, char *const *argv, char *const *envp) {
-  if (fork() == 0) execve(path, argv, envp);
+  if (fork() == 0) {
+    if (execve(path, argv, envp) == -1)
+      error(CHILD_FAILED, "execve(...) failed, errno: %d", errno);
+  }
 }
 
 const char *childPathUseGetenv() { return getenv("CHILD_PATH"); }
@@ -56,6 +59,8 @@ int main(int argc, char **argv, char **envp) {
     error(CHILD_PATH_NOT_SET, "Environment variable CHILD_PATH not set");
   char childPath[strlen(childDir) + strlen(childName) + 1];
   strcat(strcpy(childPath, childDir), childName);
+
+  forkChild(childPath, NULL, NULL);
 
   printf("child: '%s'\n", childPath);
 }
