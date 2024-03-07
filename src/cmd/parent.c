@@ -17,6 +17,7 @@
 enum Choice { UNKNOWN_CHOICE, USE_GETENV, USE_ENVP, USE_ENVIRON, QUIT };
 
 char *const *myEnviron;
+int childCount = 0;
 
 void sortString(char **strings, int (*comparator)(const char *, const char *)) {
   for (char **left = strings; *left; ++left)
@@ -96,7 +97,10 @@ void complexForkChild(enum Choice choice) {
     error(CHILD_PATH_NOT_SET, "Environment variable CHILD_PATH not set");
   char childPath[strlen(childDir) + strlen(childName) + 1];
 
-  char *const argv[] = {NULL};
+  char programName[sizeof("child_XX")];
+  sprintf(programName, "child_%02d", (childCount++) % 100);
+
+  char *const argv[] = {programName, NULL};
   forkChild(strcat(strcpy(childPath, childDir), childName), argv, NULL);
 }
 
