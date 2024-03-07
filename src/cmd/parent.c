@@ -8,7 +8,11 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <termios.h>
 #include <unistd.h>
+
+#define ENABLE(register, flag)  ((register) |= (flag))
+#define DISABLE(register, flag) ((register) &= ~(flag))
 
 enum Choice { UNKNOWN_CHOICE, USE_GETENV, USE_ENVP, USE_ENVIRON, QUIT };
 
@@ -74,8 +78,14 @@ const char *messageForChoice(enum Choice choice) {
 }
 
 int getch() {
-  char ch;
-  scanf(" %c", &ch);
+  struct termios old, current;
+  tcgetattr(STDIN_FILENO, &current);
+  old = current;
+  DISABLE(current.c_lflag, ECHO);
+  DISABLE(current.c_lflag, ICANON);
+  tcsetattr(STDIN_FILENO, TCSANOW, &current);
+  int ch = getchar();
+  tcsetattr(STDIN_FILENO, TCSANOW, &old);
   return ch;
 }
 
