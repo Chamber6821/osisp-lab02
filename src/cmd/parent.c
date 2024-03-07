@@ -2,12 +2,15 @@
 #define _GNU_SOURCE
 #include "error.h"
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+enum Choice { UNKNOWN_CHOICE, USE_GETENV, USE_ENVP, USE_ENVIRON, QUIT };
 
 void sortString(char **strings, int (*comparator)(const char *, const char *)) {
   for (char **left = strings; *left; ++left)
@@ -40,6 +43,50 @@ const char *childPathUseEnvp(char *const *envp) {
 
 const char *childPathUseEnviron() { return childPathUseEnvp(environ); }
 
+const char *choiceChildDir(enum Choice choice, char *const *envp) {
+  switch (choice) {
+  case USE_GETENV: return childPathUseGetenv();
+  case USE_ENVP: return childPathUseEnvp(envp);
+  case USE_ENVIRON: return childPathUseEnviron();
+  default: return NULL;
+  }
+}
+
+enum Choice char2choice(char ch) {
+  switch (ch) {
+  case '+': return USE_GETENV;
+  case '*': return USE_ENVP;
+  case '&': return USE_ENVIRON;
+  case 'q': return QUIT;
+  default: return UNKNOWN_CHOICE;
+  }
+}
+
+int getch() {
+  char ch;
+  scanf(" %c", &ch);
+  return ch;
+}
+
+void complexForkChild(enum Choice choice, char *const *envp) {
+  const char *childDir = choiceChildDir(choice, envp);
+  const char *childName = "/child";
+  if (!childDir)
+    error(CHILD_PATH_NOT_SET, "Environment variable CHILD_PATH not set");
+  char childPath[strlen(childDir) + strlen(childName) + 1];
+
+  char *const argv[] = {NULL};
+  forkChild(strcat(strcpy(childPath, childDir), childName), argv, NULL);
+}
+
+bool reactToChoice(enum Choice choice, char *const *envp) {
+  switch (choice) {
+  case UNKNOWN_CHOICE: printf("Unknown choice\n"); return true;
+  case QUIT: return false;
+  default: complexForkChild(choice, envp); return true;
+  }
+}
+
 int main(int argc, char **argv, char **envp) {
   (void)argc;
   (void)argv;
@@ -49,18 +96,6 @@ int main(int argc, char **argv, char **envp) {
     printf("%s\n", *env);
   }
 
-  printf("childPathUseGetenv:  '%s'\n", childPathUseGetenv());
-  printf("childPathUseEnvp:    '%s'\n", childPathUseEnvp(envp));
-  printf("childPathUseEnviron: '%s'\n", childPathUseEnviron());
-
-  const char *childDir = childPathUseGetenv();
-  const char *childName = "/child";
-  if (!childDir)
-    error(CHILD_PATH_NOT_SET, "Environment variable CHILD_PATH not set");
-  char childPath[strlen(childDir) + strlen(childName) + 1];
-  strcat(strcpy(childPath, childDir), childName);
-
-  forkChild(childPath, NULL, NULL);
-
-  printf("child: '%s'\n", childPath);
+  while (reactToChoice(char2choice(getch()), envp))
+    ;
 }
