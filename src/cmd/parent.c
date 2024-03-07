@@ -64,6 +64,15 @@ enum Choice char2choice(char ch) {
   }
 }
 
+const char *messageForChoice(enum Choice choice) {
+  switch (choice) {
+  case USE_GETENV: return "Run child using getenv";
+  case USE_ENVP: return "Run child using envp";
+  case USE_ENVIRON: return "Run child using environ";
+  default: return NULL;
+  }
+}
+
 int getch() {
   char ch;
   scanf(" %c", &ch);
@@ -82,11 +91,11 @@ void complexForkChild(enum Choice choice) {
 }
 
 bool reactToChoice(enum Choice choice) {
-  switch (choice) {
-  case UNKNOWN_CHOICE: printf("Unknown choice\n"); return true;
-  case QUIT: return false;
-  default: complexForkChild(choice); return true;
-  }
+  if (choice == QUIT) return false;
+  const char *message = messageForChoice(choice);
+  if (message) puts(message);
+  if (choice != UNKNOWN_CHOICE) complexForkChild(choice);
+  return true;
 }
 
 int main(int argc, char **argv, char **envp) {
