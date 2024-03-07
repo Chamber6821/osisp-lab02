@@ -12,6 +12,8 @@
 
 enum Choice { UNKNOWN_CHOICE, USE_GETENV, USE_ENVP, USE_ENVIRON, QUIT };
 
+char *const *myEnviron;
+
 void sortString(char **strings, int (*comparator)(const char *, const char *)) {
   for (char **left = strings; *left; ++left)
     for (char **right = left + 1; *right; ++right) {
@@ -43,10 +45,10 @@ const char *childPathUseEnvp(char *const *envp) {
 
 const char *childPathUseEnviron() { return childPathUseEnvp(environ); }
 
-const char *choiceChildDir(enum Choice choice, char *const *envp) {
+const char *choiceChildDir(enum Choice choice) {
   switch (choice) {
   case USE_GETENV: return childPathUseGetenv();
-  case USE_ENVP: return childPathUseEnvp(envp);
+  case USE_ENVP: return childPathUseEnvp(myEnviron);
   case USE_ENVIRON: return childPathUseEnviron();
   default: return NULL;
   }
@@ -68,8 +70,8 @@ int getch() {
   return ch;
 }
 
-void complexForkChild(enum Choice choice, char *const *envp) {
-  const char *childDir = choiceChildDir(choice, envp);
+void complexForkChild(enum Choice choice) {
+  const char *childDir = choiceChildDir(choice);
   const char *childName = "/child";
   if (!childDir)
     error(CHILD_PATH_NOT_SET, "Environment variable CHILD_PATH not set");
@@ -79,11 +81,11 @@ void complexForkChild(enum Choice choice, char *const *envp) {
   forkChild(strcat(strcpy(childPath, childDir), childName), argv, NULL);
 }
 
-bool reactToChoice(enum Choice choice, char *const *envp) {
+bool reactToChoice(enum Choice choice) {
   switch (choice) {
   case UNKNOWN_CHOICE: printf("Unknown choice\n"); return true;
   case QUIT: return false;
-  default: complexForkChild(choice, envp); return true;
+  default: complexForkChild(choice); return true;
   }
 }
 
@@ -95,7 +97,8 @@ int main(int argc, char **argv, char **envp) {
   for (char **env = envp; *env; ++env) {
     printf("%s\n", *env);
   }
+  myEnviron = envp;
 
-  while (reactToChoice(char2choice(getch()), envp))
+  while (reactToChoice(char2choice(getch())))
     ;
 }
