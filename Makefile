@@ -60,7 +60,7 @@ $(GDB_COMMANDS):
 
 $(CHILD_ENV_LIST): Makefile
 	mkdir -p $(dir $@)
-	echo "SHELL\nHOME\nHOSTNAME\nLOGNAME\nLANG\nTERM\nUSER\nLC_COLLATE\nPATH" > $@
+	echo "SHELL\nHOME\nHOSTNAME\nLOGNAME\nLANG\nTERM\nUSER\nLC_COLLATE" > $@
 
 .PHONY: all
 clean:
