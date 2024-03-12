@@ -88,7 +88,10 @@ void complexForkChild(enum Choice choice) {
   char programName[sizeof("child_XX")];
   sprintf(programName, "child_%02d", (childCount++) % 100);
 
-  char *const argv[] = {programName, fileWithEnvList, NULL};
+  char choiceString[42];
+  sprintf(choiceString, "%d", choice);
+
+  char *const argv[] = {programName, fileWithEnvList, choiceString, NULL};
   forkChild(strcat(strcpy(childPath, childDir), childName), argv, NULL);
 }
 
