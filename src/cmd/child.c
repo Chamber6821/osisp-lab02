@@ -27,7 +27,7 @@ int main(int argc, char **argv, char **envp) {
 
   myEnviron = envp;
 
-  printf("%s\n", name);
+  printf("%s pid=%d ppid=%d\n", name, getpid(), getppid());
 
   FILE *file = fopen(filename, "r");
   while (!feof(file)) {
