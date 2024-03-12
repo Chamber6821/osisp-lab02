@@ -1,5 +1,6 @@
 #define _XOPEN_SOURCE
 #define _GNU_SOURCE
+#include "env.h"
 #include "error.h"
 #include <errno.h>
 #include <stdbool.h>
@@ -16,7 +17,6 @@
 
 enum Choice { UNKNOWN_CHOICE, USE_GETENV, USE_ENVP, USE_ENVIRON, QUIT };
 
-char *const *myEnviron;
 const char *fileWithEnvList;
 int childCount = 0;
 
@@ -38,24 +38,11 @@ void forkChild(const char *path, char *const *argv, char *const *envp) {
   }
 }
 
-const char *childPathUseGetenv() { return getenv("CHILD_PATH"); }
-
-const char *childPathUseEnvp(char *const *envp) {
-  const char *prefix = "CHILD_PATH=";
-  for (char *const *it = envp; *it; ++it) {
-    if (strncmp(prefix, *it, strlen(prefix)) != 0) continue;
-    return strchr(*it, '=') + 1;
-  }
-  return NULL;
-}
-
-const char *childPathUseEnviron() { return childPathUseEnvp(environ); }
-
 const char *choiceChildDir(enum Choice choice) {
   switch (choice) {
-  case USE_GETENV: return childPathUseGetenv();
-  case USE_ENVP: return childPathUseEnvp(myEnviron);
-  case USE_ENVIRON: return childPathUseEnviron();
+  case USE_GETENV: return getenv("CHILD_PATH");
+  case USE_ENVP: return getFromMyEnviron("CHILD_PATH");
+  case USE_ENVIRON: return getFromEnviron("CHILD_PATH");
   default: return NULL;
   }
 }
