@@ -92,7 +92,7 @@ void complexForkChild(enum Choice choice) {
   sprintf(choiceString, "%d", choice);
 
   char *const argv[] = {programName, fileWithEnvList, choiceString, NULL};
-  forkChild(strcat(strcpy(childPath, childDir), childName), argv, NULL);
+  forkChild(strcat(strcpy(childPath, childDir), childName), argv, myEnviron);
 }
 
 bool reactToChoice(enum Choice choice) {
