@@ -17,7 +17,7 @@
 
 enum Choice { UNKNOWN_CHOICE, USE_GETENV, USE_ENVP, USE_ENVIRON, QUIT };
 
-const char *fileWithEnvList;
+char *fileWithEnvList;
 int childCount = 0;
 
 void sortString(char **strings, int (*comparator)(const char *, const char *)) {
