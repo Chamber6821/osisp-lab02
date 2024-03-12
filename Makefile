@@ -58,9 +58,9 @@ $(GDB_COMMANDS):
 	echo run finish > $@
 	echo bt 10 >> $@
 
-$(CHILD_ENV_LIST):
+$(CHILD_ENV_LIST): Makefile
 	mkdir -p $(dir $@)
-	echo "SHELL;HOME;HOSTNAME;LOGNAME;LANG;TERM;USER;LC_COLLATE;PATH" > $@
+	echo "SHELL\nHOME\nHOSTNAME\nLOGNAME\nLANG\nTERM\nUSER\nLC_COLLATE\nPATH" > $@
 
 .PHONY: all
 clean:
