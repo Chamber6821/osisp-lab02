@@ -12,6 +12,7 @@ CC = gcc $(CFLAGS)
 VALGRIND = valgrind --leak-check=full --show-leak-kinds=all
 GDB = gdb
 GDB_COMMANDS = $(BUILD_DIR)/gdb-commands.txt
+CHILD_ENV_LIST = $(BUILD_DIR)/child-env.txt
 
 SOURCES = $(call rwildcard,src/main,*.c)
 OBJECTS = $(foreach source,$(SOURCES),$(call object,$(source)))
@@ -27,8 +28,8 @@ dependencies = $(CC) -MM $(1) -MT $(2)
 all: app
 
 .PHONY: run
-run: $(EXECUTABLES)
-	$(call target,$(TARGET))
+run: $(EXECUTABLES) $(CHILD_ENV_LIST)
+	$(call target,$(TARGET)) $(CHILD_ENV_LIST)
 
 .PHONE: vrun
 vrun: $(EXECUTABLES)
@@ -56,6 +57,10 @@ $(GDB_COMMANDS):
 	mkdir -p $(dir $@)
 	echo run finish > $@
 	echo bt 10 >> $@
+
+$(CHILD_ENV_LIST):
+	mkdir -p $(dir $@)
+	echo SHELL;HOME;HOSTNAME;LOGNAME;LANG;TERM;USER;LC_COLLATE;PATH > $@
 
 .PHONY: all
 clean:
