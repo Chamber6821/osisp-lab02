@@ -17,6 +17,7 @@
 enum Choice { UNKNOWN_CHOICE, USE_GETENV, USE_ENVP, USE_ENVIRON, QUIT };
 
 char *const *myEnviron;
+const char *fileWithEnvList;
 int childCount = 0;
 
 void sortString(char **strings, int (*comparator)(const char *, const char *)) {
@@ -100,7 +101,7 @@ void complexForkChild(enum Choice choice) {
   char programName[sizeof("child_XX")];
   sprintf(programName, "child_%02d", (childCount++) % 100);
 
-  char *const argv[] = {programName, NULL};
+  char *const argv[] = {programName, fileWithEnvList, NULL};
   forkChild(strcat(strcpy(childPath, childDir), childName), argv, NULL);
 }
 
@@ -113,8 +114,13 @@ bool reactToChoice(enum Choice choice) {
 }
 
 int main(int argc, char **argv, char **envp) {
-  (void)argc;
-  (void)argv;
+  if (argc != 2)
+    error(
+        NO_ENOUGH_ARGUMENTS,
+        "Expected single argument (path), but got %d",
+        argc - 1
+    );
+  fileWithEnvList = argv[1];
 
   sortString(envp, strcmp);
   for (char **env = envp; *env; ++env) {
